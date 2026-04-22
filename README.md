@@ -17,10 +17,23 @@ This project eliminates that friction by allowing you to log expenses as natural
 - **Bilingual Context Switching:** The prompt engineering dynamically detects language intent. The bot processes both casual Indonesian slang and conversational English, providing localized confirmation replies based on the exact input language.
 - **Intelligent Routing & Categorization:** The LLM automatically categorizes the transaction and determines the account (e.g., recognizing QRIS/transfers as "Checking" and physical money as "Cash"). n8n then handles the logic to route the data to the respective Income or Expense database in Notion.
 
-Visual Showcase
-*![n8n Workflow](Screenshot 2026-04-22 224657.png)
-*(Insert Screenshot: Telegram Bot Bilingual Interaction here)*
-*(Insert Screenshot: Notion Database Output here)*
+### Visual Showcase
+
+#### 1. System Logic (n8n Workflow)
+![n8n Workflow](n8n-workflow.png)
+*The end-to-end automation pipeline connecting Telegram, Gemini, and Notion.*
+
+#### 2. Natural Language Processing (Bilingual Support)
+| Indonesian (Casual/Slang) | English (Conversational) |
+| :---: | :---: |
+| ![Telegram Indo](telegram-indonesia.png) | ![Telegram English](telegram-english.png) |
+| *Processing "makan siang 15rb"* | *Processing "bought coffee for 7,200"* |
+
+#### 3. Automated Database Entry (Notion)
+| Expense Tracking | Income Tracking |
+| :---: | :---: |
+| ![Notion Expense](expense.png) | ![Notion Income](income.png) |
+| *Real-time expense categorization* | *Automated income logging* |
 
 ### Limitations & Future Roadmap (v2.0)
 **Current Limitation (v1.0):** It still depends on active user input. Even though sending a quick chat feels fast, you still need to remember to do it after every transaction. The system runs on a Telegram trigger, so it’s only semi-automated. In the end, human memory stays the single point of failure in logging the data.
