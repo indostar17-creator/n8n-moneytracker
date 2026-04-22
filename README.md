@@ -18,7 +18,7 @@ This project eliminates that friction by allowing you to log expenses as natural
 - **Intelligent Routing & Categorization:** The LLM automatically categorizes the transaction and determines the account (e.g., recognizing QRIS/transfers as "Checking" and physical money as "Cash"). n8n then handles the logic to route the data to the respective Income or Expense database in Notion.
 
 Visual Showcase
-*![n8n Workflow](nama_file_screenshot_n8n_lu.png)
+*![n8n Workflow](Screenshot 2026-04-22 224657.png)
 *(Insert Screenshot: Telegram Bot Bilingual Interaction here)*
 *(Insert Screenshot: Notion Database Output here)*
 
