@@ -20,13 +20,13 @@ This project eliminates that friction by allowing you to log expenses as natural
 ### Visual Showcase
 
 #### 1. System Logic (n8n Workflow)
-![n8n Workflow](n8n-workflow.png)
+![n8n Workflow](n8n.png)
 *The end-to-end automation pipeline connecting Telegram, Gemini, and Notion.*
 
 #### 2. Natural Language Processing (Bilingual Support)
 | Indonesian (Casual/Slang) | English (Conversational) |
 | :---: | :---: |
-| ![Telegram Indo](telegram-indonesia.png) | ![Telegram English](telegram-english.png) |
+| ![Telegram Indo](telegramin.png) | ![Telegram English](telegramen.png) |
 | *Processing "makan siang 15rb"* | *Processing "bought coffee for 7,200"* |
 
 #### 3. Automated Database Entry (Notion)
