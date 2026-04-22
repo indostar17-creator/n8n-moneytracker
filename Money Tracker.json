@@ -1,0 +1,713 @@
+{
+  "name": "Money Tracker",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a4f82508-0335-4110-9570-16a571dbbe77",
+      "name": "Telegram Trigger",
+      "webhookId": "c8f366e7-5b4a-4829-b015-41f85fc1f001",
+      "credentials": {
+        "telegramApi": {
+          "id": "uelDb6os4eeCP51D",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=Lu adalah asisten pencatat keuangan. Ekstrak pesan user jadi format JSON MURNI. Dilarang keras pake markdown block (```json) atau ngasih teks penjelasan di luar JSON.\nKategori yang valid cuma: Breakfast and eating out, Transportation, Belanja, Investing & Trading, Subscription, Listrik, loan, donation, Kebutuhan Darurat.\nAkun yang valid cuma: \"Checking\" dan \"Cash\". ATURAN KETAT: Kalo user nyebut QRIS, transfer, tf, m-banking, e-wallet (OVO/Gopay/Shopeepay dll), debit, atau beli saham US/ETF/kripto, WAJIB jadikan \"Checking\". Kalo nyebut tunai, uang fisik, atau cash, WAJIB jadikan \"Cash\". Kalo ga disebut metode bayarnya, default ke \"Checking\".\n\nATURAN BALASAN (BILINGUAL):\nDeteksi bahasa dari pesan user.\n- Kalo user ngetik bahasa Indonesia: Isi \"reply\" pake kalimat konfirmasi kasual ala anak Jaksel/Surabaya (lo/gue). Contoh: \"Sip, 15rb buat makan siang pake QRIS udah gue catet di Checking!\"\n- Kalo user ngetik bahasa Inggris: Isi \"reply\" pake bahasa Inggris kasual. Contoh: \"Got it, 15k for lunch via QRIS is sorted in Checking!\"\nKalo pesan user adalah transaksi keuangan, return JSON dengan format ini: {\"type\": \"expense\" atau \"income\", \"amount\": angka bulat absolut, \"description\": \"nama barang/kegiatan\", \"category\": \"pilih salah satu dari kategori valid\", \"account\": \"akun yang valid\", \"reply\": \"bikin kalimat konfirmasi kasual ala anak Jaksel/Surabaya pake lo/gue. Contoh: Sip, 15rb buat makan siang pake QRIS udah gue catet di Checking!\"}\n\nKalo pesan user BUKAN transaksi keuangan, return JSON ini: {\"type\": \"none\", \"reply\": \"Eh ini bukan transaksi anjir, gue cuma ngurusin catet duit lo doang!\"}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "de9c6a2d-e199-4cfc-b90a-630f3dd99eaa",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "d266ac48-75a6-44cf-a07f-e55116a1215d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "hNAbGkaIoF1Rr3TX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        224
+      ],
+      "id": "1f659634-b8ea-45d9-8dac-287c9fc7305a",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.account }}",
+                    "rightValue": "Cash",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0d2ffef8-ce35-4954-99af-115b30ef7a9c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "80da684b-b326-4edf-8f42-374bacc18860",
+                    "leftValue": "={{ $json.account }}",
+                    "rightValue": "Checking",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        32
+      ],
+      "id": "ba03bfaa-4568-40c5-87b7-056feb0e5b59",
+      "name": "Expense"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Data format').item.json.account }}",
+                    "rightValue": "Cash",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "6594d17a-22f4-41fd-ac49-feb696f5c219"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cash"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f386338f-4e37-4387-b2f6-021c311948ab",
+                    "leftValue": "={{ $('Data format').item.json.account }}",
+                    "rightValue": "Checking",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Checking"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        368
+      ],
+      "id": "1a9e748a-b758-4e31-b1cd-1cc39a69716f",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "1224740892",
+        "text": "={{ $('Data format').item.json.reply }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1712,
+        176
+      ],
+      "id": "29fa41fc-b39d-4947-b9d8-320293a8dd5d",
+      "name": "Send a text message",
+      "webhookId": "2d3f1806-61de-4258-8f96-dd1e8baf64cb",
+      "credentials": {
+        "telegramApi": {
+          "id": "uelDb6os4eeCP51D",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "expense",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "ca1e6466-aed7-4080-a2bb-8c1f7beece39"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Expense"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1b2be658-ad7e-4c2b-92c8-7c7dacd0219c",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "income",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Income"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        48
+      ],
+      "id": "e66df43a-e882-417a-bf1a-4f3207859917",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "275be5af-6cd4-807a-8358-de61f18ba502",
+          "mode": "list",
+          "cachedResultName": "Income",
+          "cachedResultUrl": "https://www.notion.so/275be5af6cd4807a8358de61f18ba502"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.description }}"
+            },
+            {
+              "key": "Number|number",
+              "numberValue": "={{ $json.amount }}"
+            },
+            {
+              "key": "relation|relation",
+              "relationValue": [
+                "275be5af-6cd4-8085-9a1e-fa89aba54807"
+              ]
+            },
+            {
+              "key": "Income Date|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        352
+      ],
+      "id": "6871a153-b771-495c-b512-e6bf04515a11",
+      "name": "Income Cash",
+      "credentials": {
+        "notionApi": {
+          "id": "DayaGmKN9YfDxTTj",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "275be5af-6cd4-807a-8358-de61f18ba502",
+          "mode": "list",
+          "cachedResultName": "Income",
+          "cachedResultUrl": "https://www.notion.so/275be5af6cd4807a8358de61f18ba502"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.description }}"
+            },
+            {
+              "key": "Number|number",
+              "numberValue": "={{ $json.amount }}"
+            },
+            {
+              "key": "relation|relation",
+              "relationValue": [
+                "275be5af-6cd4-8093-a280-d010423090a1"
+              ]
+            },
+            {
+              "key": "Income Date|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        544
+      ],
+      "id": "f8cd512c-4a69-486c-8c48-c13557784f18",
+      "name": "Income checking",
+      "credentials": {
+        "notionApi": {
+          "id": "DayaGmKN9YfDxTTj",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "275be5af-6cd4-8042-a4ce-cfa8273a81bd",
+          "mode": "list",
+          "cachedResultName": "Expense",
+          "cachedResultUrl": "https://www.notion.so/275be5af6cd48042a4cecfa8273a81bd"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.description }}"
+            },
+            {
+              "key": "Number|number",
+              "numberValue": "={{ $json.amount }}"
+            },
+            {
+              "key": "Category|multi_select",
+              "multiSelectValue": "={{ $json.category }}"
+            },
+            {
+              "key": "relation|relation",
+              "relationValue": [
+                "275be5af-6cd4-8085-9a1e-fa89aba54807"
+              ]
+            },
+            {
+              "key": "Date|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "b9addfb9-2461-4e05-bfd1-f24519780d44",
+      "name": "Expense Cash",
+      "credentials": {
+        "notionApi": {
+          "id": "DayaGmKN9YfDxTTj",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "275be5af-6cd4-8042-a4ce-cfa8273a81bd",
+          "mode": "list",
+          "cachedResultName": "Expense",
+          "cachedResultUrl": "https://www.notion.so/275be5af6cd48042a4cecfa8273a81bd"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.description }}"
+            },
+            {
+              "key": "Number|number",
+              "numberValue": "={{ $json.amount }}"
+            },
+            {
+              "key": "Category|multi_select",
+              "multiSelectValue": "={{ $json.category }}"
+            },
+            {
+              "key": "relation|relation",
+              "relationValue": [
+                "275be5af-6cd4-8093-a280-d010423090a1"
+              ]
+            },
+            {
+              "key": "Date|date",
+              "date": "={{ $now }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        176
+      ],
+      "id": "30833efc-999b-41f9-9074-9f50255a6bb3",
+      "name": "Expense Checking",
+      "credentials": {
+        "notionApi": {
+          "id": "DayaGmKN9YfDxTTj",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return JSON.parse($json.output);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "d4513989-7a8e-499c-be39-f90d2633088c",
+      "name": "Data format"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        224,
+        272
+      ],
+      "id": "ed8ccc59-a222-424e-91f0-292c900787e7",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IoAfWcq05Sg5VHBS",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Data format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expense": {
+      "main": [
+        [
+          {
+            "node": "Expense Cash",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Expense Checking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Income Cash",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Income checking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Expense",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Income Cash": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Income checking": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expense Cash": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expense Checking": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data format": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ed3b7e6e-7375-4802-b584-60aed8bd489c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "858a567e75a1d01d7c1d90b161b28688ab91501539259fdbef9196c2584e08be"
+  },
+  "id": "aaQM15dAes5xw3yn",
+  "tags": []
+}
